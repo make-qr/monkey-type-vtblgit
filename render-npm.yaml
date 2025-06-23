@@ -3,7 +3,7 @@ services:
   - type: web
     name: monkeytype-frontend
     runtime: static
-    buildCommand: npm install -g pnpm@9.6.0 && pnpm install && pnpm build-fe
+    buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     headers:
       - path: /*
@@ -72,7 +72,7 @@ services:
   - type: web
     name: monkeytype-backend
     runtime: node
-    buildCommand: npm install -g pnpm@9.6.0 && pnpm install && pnpm build-be
+    buildCommand: cd backend && npm install && npm run build
     startCommand: cd backend && npm start
     healthCheckPath: /
     autoDeploy: false
