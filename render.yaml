@@ -1,0 +1,107 @@
+services:
+  # Frontend Static Site
+  - type: web
+    name: monkeytype-frontend
+    runtime: static
+    buildCommand: corepack enable && pnpm install && pnpm build-fe
+    staticPublishPath: ./frontend/dist
+    headers:
+      - path: /*
+        name: Content-Security-Policy
+        value: "frame-ancestors 'none'"
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /static/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.js"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.css"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: "*.woff2"
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+    routes:
+      - type: rewrite
+        source: /privacy-policy
+        destination: /privacy-policy.html
+      - type: rewrite
+        source: /terms-of-service
+        destination: /terms-of-service.html
+      - type: rewrite
+        source: /security-policy
+        destination: /security-policy.html
+      - type: rewrite
+        source: /adtest
+        destination: /adtest.html
+      - type: rewrite
+        source: /test
+        destination: /index.html
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: RECAPTCHA_SITE_KEY
+        value: 6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI
+      - key: FIREBASE_APIKEY
+        sync: false
+      - key: FIREBASE_AUTHDOMAIN
+        sync: false
+      - key: FIREBASE_PROJECTID
+        sync: false
+      - key: FIREBASE_STORAGEBUCKET
+        sync: false
+      - key: FIREBASE_MESSAGINGSENDERID
+        sync: false
+      - key: FIREBASE_APPID
+        sync: false
+      - key: BACKEND_URL
+        fromService:
+          type: web
+          name: monkeytype-backend
+          property: host
+      - key: SENTRY
+        value: false
+      - key: SERVER_OPEN
+        value: false
+
+  # Backend Web Service
+  - type: web
+    name: monkeytype-backend
+    runtime: node
+    buildCommand: corepack enable && pnpm install && pnpm build-be
+    startCommand: cd backend && npm start
+    healthCheckPath: /
+    autoDeploy: false
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DB_URI
+        value: mongodb+srv://monkeytype:gAEKcpKPtqCz05Lc@cluster0.vanthangbk.mongodb.net/monkeytype
+      - key: REDIS_URI
+        fromService:
+          type: redis
+          name: monkeytype-redis
+          property: connectionString
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: monkeytype-frontend
+          property: host
+      - key: RECAPTCHA_SECRET
+        sync: false
+      - key: FIREBASE_SERVICE_ACCOUNT_KEY
+        sync: false
+
+  # Redis Service
+  - type: redis
+    name: monkeytype-redis
+    ipAllowList: []
+    plan: starter
+
+# No databases needed - using external MongoDB Atlas 
